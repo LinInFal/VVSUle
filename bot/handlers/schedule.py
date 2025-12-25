@@ -36,7 +36,7 @@ def format_schedule_for_telegram(schedule: list) -> str:
             current_date = lesson_date
             if current_date:
                 result_lines.append(f"◻ <b>{current_date}</b>")
-                result_lines.append("─" * 42)
+                result_lines.append("─" * 32)
         
         if lesson.get('Время'):
             result_lines.append(f"<b>{lesson.get('Время', '')}</b>")
@@ -57,7 +57,7 @@ def format_schedule_for_telegram(schedule: list) -> str:
             if lesson_type:
                 result_lines.append(f"{lesson_type}")
             
-            result_lines.append("─" * 42)
+            result_lines.append("─" * 32)
     
     return "\n".join(result_lines)
 
