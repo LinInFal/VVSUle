@@ -62,7 +62,7 @@ def format_schedule_for_telegram(schedule: list) -> str:
     return "\n".join(result_lines)
 
 
-@router.message(Command("schedule"))
+@router.message(Command("s"))
 async def cmd_schedule(message: types.Message):
     """Обработчик команды /schedule"""
     args = message.text.split()
@@ -70,8 +70,8 @@ async def cmd_schedule(message: types.Message):
     if len(args) < 2:
         await message.answer(
             "❌ Не указана группа!\n"
-            "Используйте: /schedule [название_группы]\n"
-            "Например: /schedule БПИ-24-2"
+            "Используйте: /s [название_группы]\n"
+            "Например: /s БПИ-24-2"
         )
         return
     
@@ -93,9 +93,9 @@ async def cmd_schedule(message: types.Message):
             await message.answer(
                 "❌ Неверный формат команды!\n"
                 "Используйте:\n"
-                "/schedule [группа] - текущая неделя\n"
-                "/schedule next [группа] - следующая неделя\n"
-                "/schedule prev [группа] - предыдущая неделя"
+                "/s [группа] - текущая неделя\n"
+                "/s next [группа] - следующая неделя\n"
+                "/s prev [группа] - предыдущая неделя"
             )
             return
     else:
