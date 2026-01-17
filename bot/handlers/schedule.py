@@ -36,7 +36,7 @@ def format_schedule_for_telegram(schedule: list) -> str:
             current_date = lesson_date
             if current_date:
                 result_lines.append(f"◻ <b>{current_date}</b>")
-                result_lines.append("─" * 32)
+                result_lines.append("─" * 29)
         
         if lesson.get('Время'):
             result_lines.append(f"<b>{lesson.get('Время', '')}</b>")
@@ -57,14 +57,14 @@ def format_schedule_for_telegram(schedule: list) -> str:
             if lesson_type:
                 result_lines.append(f"{lesson_type}")
             
-            result_lines.append("─" * 32)
+            result_lines.append("─" * 29)
     
     return "\n".join(result_lines)
 
 
 @router.message(Command("s"))
 async def cmd_schedule(message: types.Message):
-    """Обработчик команды /schedule"""
+    """Обработчик команды /schedule (текущая неделя)"""
     args = message.text.split()
     
     if len(args) < 2:
@@ -74,37 +74,47 @@ async def cmd_schedule(message: types.Message):
             "Например: /s БПИ-24-2"
         )
         return
+
+    group_name = args[1]
+    await process_schedule_request(message, group_name, "current")
+
+@router.message(Command("s_next"))
+async def cmd_schedule(message: types.Message):
+    """Обработчик команды /schedule next (следующая неделя)"""
+    args = message.text.split()
     
-    # Разбираем аргументы
-    if len(args) == 2:
-        # Текущая неделя: /schedule БПИ-24-2
-        group_name = args[1]
-        week_type = "current"
-    elif len(args) == 3:
-        # Следующая или предыдущая неделя
-        week_modifier = args[1].lower()
-        group_name = args[2]
-        
-        if week_modifier == "next":
-            week_type = "next"
-        elif week_modifier == "prev":
-            week_type = "prev"
-        else:
-            await message.answer(
-                "❌ Неверный формат команды!\n"
-                "Используйте:\n"
-                "/s [группа] - текущая неделя\n"
-                "/s next [группа] - следующая неделя\n"
-                "/s prev [группа] - предыдущая неделя"
-            )
-            return
-    else:
-        await message.answer("❌ Неверный формат команды!")
-        return
+    if len(args) < 2:
+        await message.answer(
+            "❌ Не указана группа!\n"
+            "Используйте: /s_next [название_группы]\n"
+            "Например: /s_next БПИ-24-2"
+        )
+        return    
+
+    group_name = args[1]
+    await process_schedule_request(message, group_name, "next")
     
+@router.message(Command("s_prev"))
+async def cmd_schedule(message: types.Message):
+    """Обработчик команды /schedule prev (предыдущая неделя)"""
+    args = message.text.split()
+    
+    if len(args) < 2:
+        await message.answer(
+            "❌ Не указана группа!\n"
+            "Используйте: /s_prev [название_группы]\n"
+            "Например: /s_prev БПИ-24-2"
+        )
+        return    
+
+    group_name = args[1]
+    await process_schedule_request(message, group_name, "prev")
+
+async def process_schedule_request(message: types.Message, group_name: str, week_type: str):
+    """Общая функция обработки запроса расписания"""
     # Отправляем сообщение о начале загрузки
     loading_msg = await message.answer(f"⏳ Загружаю расписание для группы {group_name}...")
-    
+ 
     try:
         # Проверяем кэш
         cached_schedule = None
