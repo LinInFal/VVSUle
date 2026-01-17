@@ -92,22 +92,6 @@ def parse_vvsu_timetable(group_name):
             pass
         return None, None
 
-def get_current_week_schedule(driver, wait):
-    """Получает расписание текущей недели"""
-    try:
-        # Находим активное расписание (текущая неделя)
-        logger.info(f"Получение расписания текущей недели")
-        schedule_table = wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.carousel-item.active table.table-no-transform"))
-        )
-        schedule = parse_schedule_table(schedule_table)
-        logger.info(f"Получено {len(schedule)} занятий")
-        return schedule
-    except Exception as e:
-        logger.error(f"Ошибка при получении расписания: {e}")
-        return []
-
-
 def parse_schedule_table(schedule_table):
     """Парсит данные из таблицы расписания"""
     lessons = []
@@ -175,6 +159,19 @@ def parse_schedule_table(schedule_table):
     logger.info(f"Спарсено {len(lessons)} занятий")
     return lessons
 
+def get_current_week_schedule(driver, wait):
+    """Получает расписание текущей недели"""
+    try:
+        # Находим активное расписание (текущая неделя)
+        logger.info(f"Получение расписания текущей недели")
+        schedule_table = wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.carousel-item.active table.table-no-transform"))
+        )
+        schedule = parse_schedule_table(schedule_table)
+        return schedule
+    except Exception as e:
+        logger.error(f"Ошибка при получении расписания: {e}")
+        return []
 
 def go_to_previous_week(driver, wait):
     """Переходит к расписанию на предыдущую неделю"""
@@ -216,68 +213,3 @@ def go_to_next_week(driver, wait):
     except Exception as e:
         logger.error(f"Ошибка при переходе на следующую неделю: {e}")
         return []
-
-
-def print_schedule(lessons, week_description="Текущая неделя"):
-    """Выводит расписание в консоль в новом формате"""
-    if not lessons:
-        print(f"{week_description}: расписание не найдено")
-        return
-
-    current_date = None
-    for lesson in lessons:
-        # Обрабатываем дату - убираем переносы строки
-        lesson_date = lesson.get('Дата', '').replace('\n', ' ') if lesson.get('Дата') else None
-
-        # Выводим заголовок даты
-        if lesson_date != current_date:
-            current_date = lesson_date
-            if current_date:
-                print(f"{current_date}")
-                print("-" * 55)
-
-        # Выводим данные пары
-        if lesson.get('Время'):
-            print(f"{lesson.get('Время', '')}")
-            print(lesson.get('Дисциплина', ''))
-
-            # Если есть вебинар, выводим ссылку
-            webinar_link = lesson.get('Ссылка на вебинар')
-            if webinar_link:
-                print(webinar_link)
-                print(lesson.get('Аудитория', ''))
-            else:
-                print(lesson.get('Аудитория', ''))
-
-            print(lesson.get('Преподаватель', ''))
-            print(lesson.get('Тип занятия', ''))
-            print("-" * 55)
-
-# Пример использования
-if __name__ == "__main__":
-    # Укажите нужную группу
-    # group = input("Введите название группы: ")
-    group = "БПИ-24-2"
-
-    print(f"Загружаем расписание для группы {group}...")
-    driver, wait = parse_vvsu_timetable(group)
-
-    if driver and wait:
-        try:
-            # Текущая неделя
-            current_schedule = get_current_week_schedule(driver, wait)
-            print_schedule(current_schedule, "Текущая неделя")
-
-            # Предыдущая неделя
-            prev_schedule = go_to_previous_week(driver, wait)
-            print_schedule(prev_schedule, "Предыдущая неделя")
-
-            # Следующая неделя
-            next_schedule = go_to_next_week(driver, wait)
-            print_schedule(next_schedule, "Следующая неделя")
-
-        finally:
-            # Закрываем браузер
-            driver.quit()
-    else:
-        print("Не удалось загрузить страницу с расписанием")
