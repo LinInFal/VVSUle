@@ -23,8 +23,6 @@ def parse_vvsu_timetable(group_name):
     Returns:
         list: Список словарей с информацией о занятиях
     """
-    logger.info(f"Парсинг расписания для группы: {group_name}")
-
     # Настройка Firefox драйвера
     options = Options()
     options.add_argument("--headless")

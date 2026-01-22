@@ -62,10 +62,10 @@ class Config:
         
         # Database
         db_config = DatabaseConfig(
-            host=os.getenv("DB_HOST", "localhost"),
+            host=os.getenv("DB_HOST", "amvera-makxfed-cnpg-vvsule-pssql-rw"),
             port=os.getenv("DB_PORT", "5432"),
             name=os.getenv("DB_NAME", "vvsu_bot_db"),
-            user=os.getenv("DB_USER", "postgres"),
+            user=os.getenv("DB_USER", "MakxFed"),
             password=os.getenv("DB_PASSWORD", ""),
         )
         
