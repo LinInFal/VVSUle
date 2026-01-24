@@ -12,7 +12,6 @@ import json
 
 
 class CRUD:
-    # ========== User Operations ==========
     async def get_or_create_user(
             self,
             session: AsyncSession,
@@ -74,27 +73,26 @@ class CRUD:
         )
         return result.scalar_one_or_none()
 
-    # ========== Schedule Cache Operations ==========
     async def get_cached_schedule(
             self,
             session: AsyncSession,
             group_name: str,
             week_type: str
     ) -> dict:
-        """Получение кэшированного расписания"""
+        """Получение кэшированного расписания для всех недель"""
         result = await session.execute(
             select(ScheduleCache)
             .where(
                 ScheduleCache.group_name == group_name,
-                ScheduleCache.week_type == week_type
+                ScheduleCache.week_type == "all_weeks"
             )
         )
         cache = result.scalar_one_or_none()
 
         if cache:
-            # Проверяем, не устарели ли данные (больше 1 часа)
+            # Проверяем, не устарели ли данные
             time_diff = datetime.utcnow() - cache.last_updated
-            if time_diff.total_seconds() < 3600:  # 1 час
+            if time_diff.total_seconds() < 21600:  # 6 часов
                 return json.loads(cache.schedule_data)
 
         return None
@@ -106,12 +104,12 @@ class CRUD:
             week_type: str,
             schedule_data: dict
     ):
-        """Сохранение расписания в кэш"""
+        """Сохранение всех недель расписания в кэш"""
         result = await session.execute(
             select(ScheduleCache)
             .where(
                 ScheduleCache.group_name == group_name,
-                ScheduleCache.week_type == week_type
+                ScheduleCache.week_type == "all_weeks"
             )
         )
         cache = result.scalar_one_or_none()
@@ -122,14 +120,13 @@ class CRUD:
         else:
             cache = ScheduleCache(
                 group_name=group_name,
-                week_type=week_type,
+                week_type="all_weeks",
                 schedule_data=json.dumps(schedule_data, ensure_ascii=False)
             )
             session.add(cache)
 
         await session.commit()
 
-    # ========== Logging Operations ==========
     async def log_user_request(
             self,
             session: AsyncSession,

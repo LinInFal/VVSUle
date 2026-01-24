@@ -46,7 +46,7 @@ async def cmd_start(message: types.Message):
 @router.callback_query(F.data == "input_group")
 async def process_input_group(callback: types.CallbackQuery, state: FSMContext):
     """Обработчик нажатия кнопки 'Ввести группу'"""
-    await callback.message.edit_text("📝 Введите вашу группу:\n\n", reply_markup=None)
+    await callback.message.edit_text("📝 Введите вашу группу:\n\nПример: БПИ-25-1", reply_markup=None)
     await state.set_state(GroupInput.waiting_for_group)
     await callback.answer()
 
