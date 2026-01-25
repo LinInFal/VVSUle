@@ -4,12 +4,13 @@
 
 """
 from aiogram import Router, types, F
+from aiogram.types import WebAppInfo
 from aiogram.filters import Command, StateFilter    
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from database.crud import crud
 from database.database import database
-from keyboards.main_menu import get_group_input_keyboard
+from keyboards.main_menu import get_welcome_keyboard
 
 router = Router()
 
@@ -41,7 +42,7 @@ async def cmd_start(message: types.Message):
     """
 
     # Отправляем сообщение с кнопкой для ввода группы
-    await message.answer(welcome_text, reply_markup=get_group_input_keyboard())
+    await message.answer(welcome_text, reply_markup=get_welcome_keyboard())
 
 @router.callback_query(F.data == "input_group")
 async def process_input_group(callback: types.CallbackQuery, state: FSMContext):

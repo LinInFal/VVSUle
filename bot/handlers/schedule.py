@@ -72,7 +72,7 @@ async def process_main_menu(callback: types.CallbackQuery):
     
     await callback.message.edit_text(
         f"✅ Группа: <b>{group_name}</b>\n\n"
-        "Выберите неделю для просмотра расписания:",
+        "Выберите кнопу ниже для просмотра расписания:",
         parse_mode="HTML",
         reply_markup=get_main_menu_keyboard(group_name)
     )
@@ -88,40 +88,6 @@ async def process_current_week(callback: types.CallbackQuery):
         
         if user and user.group_name:
             await show_schedule_callback(callback, user.group_name, "current", 0)
-        else:
-            await callback.message.edit_text(
-                "❌ У вас не сохранена группа.\n"
-                "Введите название группы:",
-                reply_markup=get_group_input_keyboard()
-            )
-
-@router.callback_query(F.data == "next_week")
-async def process_next_week(callback: types.CallbackQuery):
-    """Обработчик кнопки 'Следующая неделя'"""
-    await callback.answer()
-    
-    async for session in database.get_session():
-        user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
-        
-        if user and user.group_name:
-            await show_schedule_callback(callback, user.group_name, "next", 1)
-        else:
-            await callback.message.edit_text(
-                "❌ У вас не сохранена группа.\n"
-                "Введите название группы:",
-                reply_markup=get_back_to_group_keyboard()
-            )
-
-@router.callback_query(F.data == "prev_week")
-async def process_prev_week(callback: types.CallbackQuery):
-    """Обработчик кнопки 'Предыдущая неделя'"""
-    await callback.answer()
-    
-    async for session in database.get_session():
-        user = await crud.get_user_by_telegram_id(session, callback.from_user.id)
-        
-        if user and user.group_name:
-            await show_schedule_callback(callback, user.group_name, "prev", -1)
         else:
             await callback.message.edit_text(
                 "❌ У вас не сохранена группа.\n"
@@ -278,7 +244,7 @@ async def get_all_weeks_data(group_name: str, user_id: int):
             )
     
     if cached_schedule:
-        logger.info(f"Использован кэш для группы {group_name} (все недели)")
+        logger.info(f"Использован кэш для группы {group_name}")
         return cached_schedule
 
     # Парсим расписание    

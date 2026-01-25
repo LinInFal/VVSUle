@@ -1,14 +1,20 @@
 """
 Inline-keyboards для бота.
 """
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
-def get_group_input_keyboard() -> InlineKeyboardMarkup:
+def get_welcome_keyboard() -> InlineKeyboardMarkup:
     """Клавиатура для ввода группы"""
     builder = InlineKeyboardBuilder()
     builder.button(text="📝 Ввести группу", callback_data="input_group")
+    builder.button(
+        text="🌐 Веб-приложение", 
+        web_app=WebAppInfo(url="https://vvsule-makxfed.amvera.io/")
+    )
+
+    builder.adjust(1, 1)
     return builder.as_markup()
 
 
@@ -17,8 +23,6 @@ def get_main_menu_keyboard(group_name: str = None) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     
     builder.button(text="📅 Текущая неделя", callback_data="current_week")
-    builder.button(text="⏩ Следующая неделя", callback_data="next_week")
-    builder.button(text="⏪ Предыдущая неделя", callback_data="prev_week")
     builder.button(text="Назад", callback_data="change_group")
     
     builder.adjust(1, 1, 1, 1)

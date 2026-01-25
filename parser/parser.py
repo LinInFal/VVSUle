@@ -43,18 +43,13 @@ def setup_driver():
     options.set_preference("devtools.console.stdout.content", True)
     
     # Устанавливаем путь к geckodriver
-    # gecko_path = "/usr/local/bin/geckodriver"
+    gecko_path = "/usr/local/bin/geckodriver"
     
     try:
-        # service = FirefoxService(executable_path=gecko_path, log_path="/tmp/geckodriver.log")
+        service = FirefoxService(executable_path=gecko_path, log_path="/tmp/geckodriver.log")
         
-        # driver = webdriver.Firefox(service=service, options=options)
+        driver = webdriver.Firefox(service=service, options=options)
         driver = webdriver.Firefox(options=options)
-
-        # Устанавливаем таймауты
-        # driver.set_page_load_timeout(30)
-        # driver.implicitly_wait(10)
-        # driver.set_script_timeout(30)
         
         logger.info("✅ Firefox драйвер успешно инициализирован")
         
@@ -82,10 +77,7 @@ def parse_vvsu_timetable(group_name):
             logger.error("Не удалось инициализировать драйвер")
             return None, None
         
-        driver.set_page_load_timeout(20)
-
-        # Ждем загрузки страницы
-        wait = WebDriverWait(driver, 15)
+        wait = WebDriverWait(driver, 2)
 
         driver.get("https://www.vvsu.ru/timetable/")
         logger.info(f"Открыта страница расписания")
@@ -147,16 +139,12 @@ def parse_vvsu_timetable(group_name):
                 next_schedule = go_to_next_week(driver, wait)
                 if next_schedule and len(next_schedule) > 0:
                     all_weeks_schedule.append(next_schedule)
-                    logger.info(f"Следующая неделя {i+1}: {len(next_schedule)} занятий")
+                    logger.info(f"Неделя {i+1}: {len(next_schedule)} занятий")
                 else:
                     break
             except Exception as e:
                 logger.error(f"Ошибка при парсинге следующей недели {i+1}: {e}")
                 break
-        
-        # Возвращаемся к текущей неделе
-        for i in range(len(all_weeks_schedule) - 1):
-            go_to_previous_week(driver, wait)
         
         # Создаем структуру данных для возврата
         result = {
@@ -183,7 +171,6 @@ def parse_schedule_table(schedule_table):
     """Парсит данные из таблицы расписания"""
     lessons = []
     rows = schedule_table.find_elements(By.CSS_SELECTOR, "tbody tr")
-    logger.info(f"Найдено строк в таблице: {len(rows)}")
 
     current_date = None
 
@@ -249,44 +236,19 @@ def get_current_week_schedule(driver, wait):
     """Получает расписание текущей недели"""
     try:
         # Находим активное расписание (текущая неделя)
-        logger.info(f"Получение расписания текущей недели")
-
         schedule_table = wait.until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.carousel-item.active table.table-no-transform"))
         )
         schedule = parse_schedule_table(schedule_table)
-        logger.info(f"Получено {len(schedule)} занятий")
         return schedule
     except Exception as e:
         logger.error(f"Ошибка при получении расписания: {e}", exc_info=True)
         return []
 
-def go_to_previous_week(driver, wait):
-    """Переходит к расписанию на предыдущую неделю"""
-    try:
-        # Находим кнопку "Назад"
-        logger.info(f"Переход к предыдущей неделе")
-        prev_button = wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button.arrow-button.left[data-bs-slide='prev']"))
-        )
-        driver.execute_script("arguments[0].click();", prev_button)
-
-        # Ждем загрузки нового расписания
-        time.sleep(2)
-
-        # Получаем расписание предыдущей недели
-        return get_current_week_schedule(driver, wait)
-
-    except Exception as e:
-        logger.error(f"Ошибка при переходе на предыдущую неделю: {e}")
-        return []
-
-
 def go_to_next_week(driver, wait):
     """Переходит к расписанию на следующую неделю"""
     try:
         # Находим кнопку "Вперед"
-        logger.info(f"Переход к следующей неделе")
         next_button = wait.until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "button.arrow-button.right[data-bs-slide='next']"))
         )

@@ -62,7 +62,7 @@ class Config:
         
         # Database
         db_config = DatabaseConfig(
-            #host=os.getenv("DB_HOST", "amvera-makxfed-cnpg-vvsule-pssql-rw"),
+            #host=os.getenv("DB_HOST", "amvera-makxfed-cnpg-vvsule2-rw"),
             host=os.getenv("DB_HOST", "localhost"),
             port=os.getenv("DB_PORT", "5432"),
             name=os.getenv("DB_NAME", "vvsu_bot_db"),
