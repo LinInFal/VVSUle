@@ -8,15 +8,18 @@ from aiogram.types import WebAppInfo
 from aiogram.filters import Command, StateFilter    
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from database.crud import crud
-from database.database import database
-from keyboards.main_menu import get_welcome_keyboard
+from vvsule.database.crud import crud
+from vvsule.database.database import database
+from vvsule.keyboards import get_welcome_keyboard, get_main_menu_keyboard
+
 
 router = Router()
+
 
 class GroupInput(StatesGroup):
     """Состояния для ввода группы"""
     waiting_for_group = State()
+
 
 @router.message(Command("start"))
 async def cmd_start(message: types.Message):
@@ -44,12 +47,17 @@ async def cmd_start(message: types.Message):
     # Отправляем сообщение с кнопкой для ввода группы
     await message.answer(welcome_text, reply_markup=get_welcome_keyboard())
 
+
 @router.callback_query(F.data == "input_group")
 async def process_input_group(callback: types.CallbackQuery, state: FSMContext):
     """Обработчик нажатия кнопки 'Ввести группу'"""
-    await callback.message.edit_text("📝 Введите вашу группу:\n\nПример: БПИ-25-1", reply_markup=None)
+    await callback.message.edit_text(
+        "📝 Введите вашу группу:\n\nПример: БПИ-25-1", 
+        reply_markup=None
+    )
     await state.set_state(GroupInput.waiting_for_group)
     await callback.answer()
+
 
 @router.message(StateFilter(GroupInput.waiting_for_group))
 async def process_group_input(message: types.Message, state: FSMContext):
@@ -64,17 +72,31 @@ async def process_group_input(message: types.Message, state: FSMContext):
             group_name=group_name
         )
     
-    # Переходим к выбору недели
-    from keyboards.main_menu import get_main_menu_keyboard
+    # Редактируем сообщение с приветствием
     await message.answer(
         f"✅ Группа сохранена: <b>{group_name}</b>\n\n"
-        "Выберите неделю для просмотра расписания:",
+        "Выберите кнопку ниже для просмотра расписания:",
         parse_mode="HTML",
         reply_markup=get_main_menu_keyboard(group_name)
     )
     await state.clear()
 
+
 @router.callback_query(F.data == "change_group")
 async def process_change_group(callback: types.CallbackQuery, state: FSMContext):
     """Обработчик смены группы"""
     await process_input_group(callback, state)
+
+
+@router.callback_query(F.data.startswith("main_menu_"))
+async def process_main_menu(callback: types.CallbackQuery):
+    """Обработчик возврата из расписания в главное меню"""
+    group_name = callback.data.replace("main_menu_", "")
+    
+    await callback.message.edit_text(
+        f"✅ Группа: <b>{group_name}</b>\n\n"
+        "Выберите кнопку ниже для просмотра расписания:",
+        parse_mode="HTML",
+        reply_markup=get_main_menu_keyboard(group_name)
+    )
+    await callback.answer()

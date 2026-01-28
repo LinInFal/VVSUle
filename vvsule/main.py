@@ -9,18 +9,17 @@ from aiogram.client.default import DefaultBotProperties
 import asyncio
 import logging
 from config import config
-from database.database import database
+from vvsule.database.database import database
 
 # Импортируем роутеры
-from .handlers.start import router as start_router
-from .handlers.schedule import router as schedule_router
+from vvsule.handlers.start import router as start_router
+from vvsule.handlers.schedule import router as schedule_router
+
 
 logging.basicConfig(
     level=config.log_level,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-
-logger = logging.getLogger(__name__)
 
 
 async def main():
@@ -28,7 +27,7 @@ async def main():
 
     # Создаем таблицы в БД
     await database.create_tables()
-    logger.info("База данных инициализирована")
+    logging.info("База данных инициализирована")
 
     # Инициализируем бота и диспетчер
     bot = Bot(
@@ -43,8 +42,9 @@ async def main():
     dp.include_router(schedule_router)
 
     # Запускаем бота
-    logger.info("Бот запущен...")
+    logging.info("Бот запущен...")
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

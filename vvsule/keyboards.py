@@ -23,9 +23,9 @@ def get_main_menu_keyboard(group_name: str = None) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     
     builder.button(text="📅 Текущая неделя", callback_data="current_week")
-    builder.button(text="Назад", callback_data="change_group")
+    builder.button(text="Назад", callback_data="input_group")
     
-    builder.adjust(1, 1, 1, 1)
+    builder.adjust(1, 1)
     return builder.as_markup()
 
 
