@@ -1,34 +1,19 @@
 """
+(Не рабочий)
 Получает погоду во Владивостоке с помощью Gismeteo API
 
 """
-
 import logging
 import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, List
 import aiopygismeteo
-import os
-from dotenv import load_dotenv
-
-
-# Загружаем переменные окружения
-load_dotenv()
-
 
 class GismeteoWeather:
     """Класс для работы с погодой через aiopygismeteo"""
     
     def __init__(self):
-        self.api_token = os.getenv("GISMETEO_API_TOKEN")
-        
-        if not self.api_token:
-            logging.warning("GISMETEO_API_TOKEN не найден в .env файле")
-            logging.warning("Будет использоваться демо-режим")
-            self.api_token = None
-        else:
-            self.gism = aiopygismeteo.Gismeteo(token=self.api_token)
-
+        self.api_token = None
         self.city_name = "Владивосток"
         self.city_id = None  # Будет определен при первом запросе
         self.weather_smiles = {
@@ -50,24 +35,7 @@ class GismeteoWeather:
 
     async def _get_city_id(self) -> int:
         """Получает ID города Владивосток"""
-        if self.city_id:
-            return self.city_id
-
-        if not self.gism:
-            return None
-        
-        try:
-            search_results = await self.gism.search.by_query(self.city_name)
-            if search_results:
-                self.city_id = search_results[0].id
-                logging.info(f"Найден ID города {self.city_name}: {self.city_id}")
-                return self.city_id
-            else:
-                logging.error(f"Город {self.city_name} не найден")
-                return None
-        except Exception as e:
-            logging.error(f"Ошибка поиска города: {e}")
-            return None
+        pass
     
 
     async def get_weekly_weather(self) -> Dict:
@@ -104,127 +72,22 @@ class GismeteoWeather:
 
     async def _parse_weather_data(self, data: List) -> Dict:
         """Парсит данные от API в удобный формат"""
-        try:
-            weekly_forecast = []
-            
-            for i, day_data in enumerate(data):
-                if i >= 7:  # Ограничиваем 7 днями
-                    break
-                
-                # Дата
-                date_str = day_data.date.local
-                date_obj = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-                
-                # Температура
-                temperature = day_data.temperature.air.c
-                
-                # Влажность
-                humidity = day_data.humidity.percent
-                
-                # Ветер
-                wind_speed = day_data.wind.speed.m_s
-                wind_direction_code = day_data.wind.direction.scale_8
-                wind_direction = self._get_wind_direction_symbol(wind_direction_code)
-                
-                # Осадки
-                precipitation = day_data.precipitation.amount
-                
-                # Погодные условия
-                description = day_data.description.full.lower()
-                condition_icon = self._get_weather_icon(description)
-                condition_text = day_data.description.full
-                
-                # День недели на русском
-                weekday_ru = self._get_russian_weekday(date_obj.weekday())
-                # Дата в формате "22 января"
-                day_month = f"{date_obj.day} {self._get_russian_month(date_obj.month)}"
-                
-                weekly_forecast.append({
-                    "date": date_str,
-                    "date_display": f"{weekday_ru}, {day_month}",
-                    "date_obj": date_obj.isoformat(),
-                    "day_of_week": weekday_ru,
-                    "day": date_obj.day,
-                    "month": self._get_russian_month(date_obj.month),
-                    "temperature": round(temperature),
-                    "humidity": humidity,
-                    "wind_speed": round(wind_speed),
-                    "wind_direction": wind_direction,
-                    "precipitation": precipitation,
-                    "condition_icon": condition_icon,
-                    "condition_text": condition_text,
-                    "condition_code": self._get_condition_code(description)
-                })
-            
-            return {
-                "success": True,
-                "city": "Владивосток",
-                "updated_at": datetime.now().isoformat(),
-                "forecast": weekly_forecast,
-                "source": "gismeteo"
-            }
-            
-        except Exception as e:
-            logging.error(f"Ошибка парсинга данных погоды: {e}")
-            return self._get_demo_data()
+        pass
     
 
     def _get_weather_icon(self, description: str) -> str:
         """Получает emoji иконку погоды по описанию"""
-        description_lower = description.lower()
-        
-        for key, icon in self.weather_smiles.items():
-            if key in description_lower:
-                return icon
+        pass
 
     
     def _get_condition_code(self, description: str) -> int:
         """Получает код состояния погоды для демо-данных"""
-        description_lower = description.lower()
-        
-        if 'ясн' in description_lower:
-            return 1
-        elif 'малооблач' in description_lower:
-            return 2
-        elif 'переменная' in description_lower:
-            return 3
-        elif 'обл' in description_lower or 'пас' in description_lower:
-            return 4
-        elif 'дож' in description_lower:
-            return 5
-        elif 'лив' in description_lower:
-            return 6
-        elif 'гроз' in description_lower:
-            return 7
-        elif 'сне' in description_lower:
-            return 8
-        elif 'тум' in description_lower or 'дым' in description_lower:
-            return 9
-        else:
-            return 1
+        pass
     
 
     def _get_wind_direction_symbol(self, direction_code: str) -> str:
         """Конвертирует код направления ветра в символ"""
-        directions = {
-            "n": "С",      # Север
-            "nne": "ССВ",  # Северо-северо-восток
-            "ne": "СВ",    # Северо-восток
-            "ene": "ВСВ",  # Восток-северо-восток
-            "e": "В",      # Восток
-            "ese": "ВЮВ",  # Восток-юго-восток
-            "se": "ЮВ",    # Юго-восток
-            "sse": "ЮЮВ",  # Юго-юго-восток
-            "s": "Ю",      # Юг
-            "ssw": "ЮЮЗ",  # Юго-юго-запад
-            "sw": "ЮЗ",    # Юго-запад
-            "wsw": "ЗЮЗ",  # Запад-юго-запад
-            "w": "З",      # Запад
-            "wnw": "ЗСЗ",  # Запад-северо-запад
-            "nw": "СЗ",    # Северо-запад
-            "nnw": "ССЗ",  # Северо-северо-запад
-        }
-        return directions.get(direction_code.lower(), "")
+        pass
     
 
     def _get_russian_weekday(self, weekday: int) -> str:

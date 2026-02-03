@@ -29,6 +29,11 @@ class User(Base):
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', group='{self.group_name}')>"
 
+    @property
+    def normalized_group_name(self):
+        """Нормализованное имя группы (верхний регистр)"""
+        return self.group_name.upper() if self.group_name else None
+
 
 class ScheduleCache(Base):
     __tablename__ = "schedule_cache"

@@ -83,10 +83,12 @@ class CRUD:
             week_type: str
     ) -> dict:
         """Получение кэшированного расписания для всех недель"""
+        normalized_group = group_name.upper()
+
         result = await session.execute(
             select(ScheduleCache)
             .where(
-                ScheduleCache.group_name == group_name,
+                ScheduleCache.group_name == normalized_group,
                 ScheduleCache.week_type == "all_weeks"
             )
         )
@@ -109,10 +111,12 @@ class CRUD:
             schedule_data: dict
     ):
         """Сохранение всех недель расписания в кэш"""
+        normalized_group = group_name.upper()
+
         result = await session.execute(
             select(ScheduleCache)
             .where(
-                ScheduleCache.group_name == group_name,
+                ScheduleCache.group_name == normalized_group,
                 ScheduleCache.week_type == "all_weeks"
             )
         )
@@ -123,7 +127,7 @@ class CRUD:
             cache.last_updated = datetime.utcnow()
         else:
             cache = ScheduleCache(
-                group_name=group_name,
+                group_name=normalized_group,
                 week_type="all_weeks",
                 schedule_data=json.dumps(schedule_data, ensure_ascii=False)
             )

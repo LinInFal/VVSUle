@@ -64,8 +64,10 @@ def setup_driver():
 
 def parse_vvsu_timetable(group_name):
     """Парсинг ВСЕХ доступных недель расписания"""
-    logging.info(f"=== НАЧАЛО парсинга ВСЕХ недель для {group_name} ===")
-    
+    normalized_group = group_name.upper()
+
+    logging.info(f"=== НАЧАЛО парсинга ВСЕХ недель для {normalized_group} ===")
+
     driver = None
     try:
         driver = setup_driver()
@@ -74,6 +76,7 @@ def parse_vvsu_timetable(group_name):
         
         # Открываем страницу
         logging.info("Открываю страницу расписания...")
+        time.sleep(1)
         try:
             driver.get("https://www.vvsu.ru/timetable/")
             logging.info("Страница открыта")
@@ -83,6 +86,7 @@ def parse_vvsu_timetable(group_name):
         
         # Находим и заполняем поле
         logging.info("Ищу поле для ввода группы...")
+        time.sleep(1)
         try:
             # Ждем загрузки страницы
             time.sleep(1)
@@ -90,8 +94,8 @@ def parse_vvsu_timetable(group_name):
                 EC.presence_of_element_located((By.CSS_SELECTOR, "input#gr"))
             )
             group_input.clear()
-            group_input.send_keys(group_name)
-            logging.info(f"Ввел группу: {group_name}")
+            group_input.send_keys(normalized_group)
+            logging.info(f"Ввел группу: {normalized_group}")
             time.sleep(1)  # Ждем появления списка
         except TimeoutException:
             logging.error("Таймаут при поиске поля ввода")
@@ -104,17 +108,17 @@ def parse_vvsu_timetable(group_name):
             group_button = None
             buttons = driver.find_elements(By.TAG_NAME, "button")
             for button in buttons:
-                if group_name in button.text:
+                if normalized_group in button.text:
                     group_button = button
                     break
             
             if group_button:
                 driver.execute_script("arguments[0].click();", group_button)
-                logging.info(f"Кликнул по группе {group_name}")
+                logging.info(f"Кликнул по группе {normalized_group}")
                 time.sleep(2)  # Ждем загрузки расписания
             else:
-                logging.error(f"Кнопка группы {group_name} не найдена")
-                return {"success": False, "error": f"Группа {group_name} не найдена", "weeks": []}
+                logging.error(f"Кнопка группы {normalized_group} не найдена")
+                return {"success": False, "error": f"Группа {normalized_group} не найдена", "weeks": []}
         except Exception as e:
             logging.error(f"Ошибка при выборе группы: {e}")
             return {"success": False, "error": f"Ошибка при выборе группы: {e}", "weeks": []}
@@ -158,13 +162,13 @@ def parse_vvsu_timetable(group_name):
         # Возвращаем результат
         result = {
             'success': True,
-            'group_name': group_name,
+            'group_name': normalized_group,
             'weeks': all_weeks_schedule,
             'parsed_at': datetime.now().isoformat(),
             'total_weeks': len(all_weeks_schedule)
         }
         
-        logging.info(f"=== УСПЕШНО завершен парсинг: {len(all_weeks_schedule)} недель для {group_name} ===")
+        logging.info(f"=== УСПЕШНО завершен парсинг: {len(all_weeks_schedule)} недель для {normalized_group} ===")
         return result
 
     except Exception as e:
@@ -185,7 +189,7 @@ def parse_current_week(driver):
     """Парсит текущую активную неделю"""
     try:
         # Ищем активную таблицу
-        schedule_table = WebDriverWait(driver, 5).until(
+        schedule_table = WebDriverWait(driver, 3).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div.carousel-item.active table.table-no-transform"))
         )
         return parse_schedule_table(schedule_table)

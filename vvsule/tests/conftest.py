@@ -1,9 +1,7 @@
 """
 Конфигурация pytest для тестов VVSUle
 
-"""
 
-"""
 Запуск всех тестов
 pytest vvsule/tests/ -v
 
@@ -12,9 +10,6 @@ pytest vvsule/tests/ --cov=vvsule --cov-report=html
 
 Запуск конкретного тестового файла
 pytest vvsule/tests/test_parser.py -v
-
-Запуск тестов с выводом подробной информации
-pytest vvsule/tests/ -v --tb=short
 """
 import pytest
 import asyncio

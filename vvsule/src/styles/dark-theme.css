@@ -1,0 +1,140 @@
+body.dark-theme {
+    background: #0D1B24;
+}
+
+body.dark-theme .app {
+    background: #0D1B24;
+}
+
+body.dark-theme .title,
+body.dark-theme .icon {
+    color: white;
+}
+
+body.dark-theme .search input {
+    background: #32353C;
+    border-color: #555;
+    color: #7C808B;
+}
+
+body.dark-theme .search input::placeholder {
+    color: #7C808B;
+}
+
+body.dark-theme .btn,
+body.dark-theme .btn2 {
+    background: #32353C;
+    border-color: #555;
+    color: #7C808B;
+}
+
+body.dark-theme .schedule {
+    background: #1E242C;
+}
+
+body.dark-theme .day {
+    border-top: 1px solid #7C808B;
+}
+
+body.dark-theme .day.first {
+    border-top: none;
+}
+
+body.dark-theme .day-title {
+    color: #ffffff;
+}
+
+body.dark-theme .lesson {
+    border-top: 1px solid #7C808B;
+}
+
+body.dark-theme .time {
+    color: #ffffff;
+}
+
+body.dark-theme .name {
+    color: #4dabf7;
+}
+
+body.dark-theme .place {
+    color: #69db7c;
+}
+
+body.dark-theme .teacher {
+    color: #b197fc;
+}
+
+body.dark-theme .type {
+    color: #ff6b6b;
+}
+
+body.dark-theme .nav-btn {
+    background: #32353C;
+    border: 1px solid #7C808B;
+    color: #ffffff;
+}
+
+body.dark-theme .nav-btn:hover {
+    background: #3A3E46;
+}
+
+body.dark-theme .nav-btn:disabled {
+    background: #2A2E36;
+    color: #7C808B;
+}
+
+body.dark-theme .loading,
+body.dark-theme .loading p,
+body.dark-theme .no-schedule,
+body.dark-theme .no-schedule p,
+body.dark-theme .error,
+body.dark-theme .error p {
+    color: #ffffff;
+}
+
+body.dark-theme .spinner {
+    border: 4px solid #2A2E36;
+    border-top: 4px solid #4dabf7;
+}
+
+body.dark-theme .error p:first-child {
+    color: #ff6b6b;
+}
+
+body.dark-theme .retry-btn {
+    background: #4dabf7;
+}
+
+body.dark-theme .retry-btn:hover {
+    background: #339af0;
+}
+
+body.dark-theme .no-schedule p {
+    color: #D1D5DB;
+}
+
+body.dark-theme .weather-title {
+    color: #ffffff;
+}
+
+body.dark-theme .weather-day {
+    background: #1E242C;
+}
+
+body.dark-theme .weather-header.first {
+    color: #ffffff;
+    border-top: none;
+}
+
+body.dark-theme .weather-header {
+    color: #ffffff;
+    border-top: 1px solid #7C808B;
+    border-bottom: 1px solid #7C808B;
+}
+
+body.dark-theme .weather-temp,
+body.dark-theme .weather-detail,
+body.dark-theme .detail-label,
+body.dark-theme .detail-value {
+    color: #ffffff;
+}

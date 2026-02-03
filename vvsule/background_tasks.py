@@ -15,22 +15,24 @@ async def parse_and_send_schedule(bot: Bot, chat_id: int, group_name: str, user_
                                   week_type: str, offset: int, message_id: int = None):
     """Фоновая задача парсинга и отправки/редактирования расписания"""
     try:
-        logging.info(f"=== НАЧАЛО фонового парсинга для {group_name} ===")
+        normalized_group = group_name.upper()
+
+        logging.info(f"=== НАЧАЛО фонового парсинга для {normalized_group} ===")
         
         # Сначала проверяем кэш
         cached_schedule = None
         async for session in database.get_session():
-            logging.info(f"Проверяю кэш для группы {group_name}")
+            logging.info(f"Проверяю кэш для группы {normalized_group}")
             cached_schedule = await crud.get_cached_schedule(
                 session=session,
-                group_name=group_name,
+                group_name=normalized_group,
                 week_type="all_weeks"
             )
             
             if cached_schedule:
-                logging.info(f"Найден кэш для {group_name}: {len(cached_schedule.get('weeks', []))} недель")
+                logging.info(f"Найден кэш для {normalized_group}: {len(cached_schedule.get('weeks', []))} недель")
             else:
-                logging.info(f"Кэш для {group_name} не найден")
+                logging.info(f"Кэш для {normalized_group} не найден")
             
             # Логируем запрос
             user = await crud.get_user_by_telegram_id(session, user_id)
@@ -39,17 +41,17 @@ async def parse_and_send_schedule(bot: Bot, chat_id: int, group_name: str, user_
                     session=session,
                     user_id=user.id,
                     command="schedule_all_weeks",
-                    group_name=group_name
+                    group_name=normalized_group
                 )
         
         all_weeks_data = cached_schedule
         
         if not all_weeks_data:
-            logging.info(f"Начинаю парсинг ВСЕХ недель для {group_name}")
+            logging.info(f"Начинаю парсинг ВСЕХ недель для {normalized_group}")
             # Парсим расписание
             loop = asyncio.get_event_loop()
             all_weeks_data = await loop.run_in_executor(
-                None, parse_vvsu_timetable, group_name
+                None, parse_vvsu_timetable, normalized_group
             )
             
             if all_weeks_data:
@@ -57,12 +59,12 @@ async def parse_and_send_schedule(bot: Bot, chat_id: int, group_name: str, user_
             
             # Сохраняем в кэш если успешно
             if all_weeks_data and all_weeks_data.get('success') is True:
-                logging.info(f"Сохраняю в кэш для {group_name}")
+                logging.info(f"Сохраняю в кэш для {normalized_group}")
                 async for session in database.get_session():
                     try:
                         await crud.save_schedule_cache(
                             session=session,
-                            group_name=group_name,
+                            group_name=normalized_group,
                             week_type="all_weeks",
                             schedule_data=all_weeks_data
                         )
@@ -72,7 +74,7 @@ async def parse_and_send_schedule(bot: Bot, chat_id: int, group_name: str, user_
         
         # Проверяем результат
         if not all_weeks_data:
-            logging.error(f"all_weeks_data is None для {group_name}")
+            logging.error(f"all_weeks_data is None для {normalized_group}")
             error_text = f"❌ Не удалось загрузить расписание: Пустой результат"
             if message_id:
                 await bot.edit_message_text(
@@ -107,8 +109,8 @@ async def parse_and_send_schedule(bot: Bot, chat_id: int, group_name: str, user_
         logging.info(f"Получено недель: {total_weeks}")
         
         if total_weeks == 0:
-            logging.warning(f"Пустое расписание для {group_name}")
-            error_text = f"❌ Расписание для группы {group_name} не найдено"
+            logging.warning(f"Пустое расписание для {normalized_group}")
+            error_text = f"❌ Расписание для группы {normalized_group} не найдено"
             if message_id:
                 await bot.edit_message_text(
                     chat_id=chat_id,
@@ -121,7 +123,7 @@ async def parse_and_send_schedule(bot: Bot, chat_id: int, group_name: str, user_
             return
         
         # Определяем индекс недели
-        week_index = calculate_week_index(week_type, offset, total_weeks, user_id, group_name)
+        week_index = calculate_week_index(week_type, offset, total_weeks, user_id, normalized_group)
         
         logging.info(f"Выбираю неделю {week_index + 1} из {total_weeks}")
         
@@ -138,14 +140,14 @@ async def parse_and_send_schedule(bot: Bot, chat_id: int, group_name: str, user_
         week_name = get_week_name_with_number(week_type, offset, week_index, total_weeks)
         
         response_text = (
-            f"Расписание для группы <b>{group_name}</b>\n"
+            f"Расписание для группы <b>{normalized_group}</b>\n"
             f"{week_name}\n"
             f"Неделя {week_index + 1} из {total_weeks}\n\n"
             f"{schedule_text}"
         )
         
         # Создаем клавиатуру
-        keyboard = get_schedule_keyboard(group_name, week_type)
+        keyboard = get_schedule_keyboard(normalized_group, week_type)
         
         logging.info(f"Подготавливаю сообщение ({len(response_text)} символов)")
         
@@ -158,7 +160,7 @@ async def parse_and_send_schedule(bot: Bot, chat_id: int, group_name: str, user_
             keyboard=keyboard
         )
         
-        logging.info(f"=== УСПЕШНО завершено для {group_name} ===")
+        logging.info(f"=== УСПЕШНО завершено для {normalized_group} ===")
         
     except Exception as e:
         logging.error(f"=== ОШИБКА в фоновой задаче: {e} ===", exc_info=True)

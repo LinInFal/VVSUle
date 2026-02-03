@@ -25,8 +25,10 @@ async def process_current_week(callback: types.CallbackQuery, bot: Bot):
         
         if user and user.group_name:
             # Редактируем сообщение на "Загрузка..."
+            normalized_group = user.group_name.upper()
+
             await callback.message.edit_text(
-                f"⏳ Загружаю расписание для группы <b>{user.group_name}</b>...\n"
+                f"⏳ Загружаю расписание для группы <b>{normalized_group}</b>...\n"
                 f"⏰ Это может занять некоторое время",
                 parse_mode="HTML"
             )
@@ -36,7 +38,7 @@ async def process_current_week(callback: types.CallbackQuery, bot: Bot):
                 parse_and_send_schedule(
                     bot=bot,
                     chat_id=callback.message.chat.id,
-                    group_name=user.group_name,
+                    group_name=normalized_group,
                     user_id=callback.from_user.id,
                     week_type="current",
                     offset=0,
@@ -63,6 +65,8 @@ async def process_schedule_navigation(callback: types.CallbackQuery, bot: Bot):
         direction = parts[1]  # current, next, prev
         group_name = "_".join(parts[2:])  # восстанавливаем группу
         
+        normalized_group = group_name.upper()
+
         offset = 0
         if direction == "prev":
             offset = -1
@@ -73,7 +77,7 @@ async def process_schedule_navigation(callback: types.CallbackQuery, bot: Bot):
         
         # Редактируем сообщение на "Загрузка..."
         await callback.message.edit_text(
-            f"⏳ Загружаю расписание для группы <b>{group_name}</b>...",
+            f"⏳ Загружаю расписание для группы <b>{normalized_group}</b>...",
             parse_mode="HTML"
         )
         
@@ -82,7 +86,7 @@ async def process_schedule_navigation(callback: types.CallbackQuery, bot: Bot):
             parse_and_send_schedule(
                 bot=bot,
                 chat_id=callback.message.chat.id,
-                group_name=group_name,
+                group_name=normalized_group,
                 user_id=callback.from_user.id,
                 week_type=direction,
                 offset=offset,

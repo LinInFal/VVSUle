@@ -1,0 +1,72 @@
+.schedule {
+    flex: 1;
+    background: #E6E9F1;
+    border-radius: 12px;
+    padding: 12px;
+    overflow-y: auto;
+    border: 1px solid #000000;
+    display: none;
+}
+
+.day {
+    border-top: 1px solid #000000;
+    margin-bottom: 1px;
+}
+
+.day.first {
+    border-top: none;
+}
+
+.day-title {
+    font-weight: 600;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    color: #000000;
+}
+
+.day-title.first {
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 6px;
+}
+
+.lesson {
+    padding: 10px 0;
+    border-top: 1px solid black;
+}
+
+.lesson:first-child {
+    border-top: none;
+}
+
+.time {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 4px;
+}
+
+.name {
+    font-weight: 600;
+    margin-top: 4px;
+    color: #0a56a5;
+    margin-bottom: 6px;
+}
+
+.place, .teacher, .type {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.place {
+    color: #27ae60;
+}
+
+.teacher {
+    color: #8e44ad;
+}
+
+.type {
+    color: #e74c3c;
+    font-style: italic;
+}

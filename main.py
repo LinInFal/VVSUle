@@ -56,25 +56,26 @@ def get_cached_schedule(group_name: str):
         return None
     
     session = SessionLocal()
+    normalized_group = group_name.upper()
     try:
         # Ищем кэш в БД
         cache = session.query(ScheduleCache).filter(
-            ScheduleCache.group_name == group_name,
+            ScheduleCache.group_name == normalized_group,
             ScheduleCache.week_type == "all_weeks"
         ).first()
         
         if cache:
-            # Проверяем, не устарели ли данные (24 часа)
+            # Проверяем, не устарели ли данные
             time_diff = datetime.utcnow() - cache.last_updated
-            if time_diff.total_seconds() < 86400:  # 24 часа
+            if time_diff.total_seconds() < 21600:  # 6 часов
                 try:
                     data = json.loads(cache.schedule_data)
-                    logging.info(f"Загружен кэш для {group_name}: {len(data.get('weeks', []))} недель")
+                    logging.info(f"Загружен кэш для {normalized_group}: {len(data.get('weeks', []))} недель")
                     return data
                 except Exception as e:
                     logging.error(f"Ошибка при загрузке кэша: {e}")
         
-        logging.info(f"Кэш для {group_name} не найден или устарел")
+        logging.info(f"Кэш для {normalized_group} не найден или устарел")
         return None
         
     except Exception as e:
@@ -90,28 +91,29 @@ def save_schedule_cache(group_name: str, schedule_data: dict):
         return
     
     session = SessionLocal()
+    normalized_group = group_name.upper()
     try:
         # Ищем существующий кэш
         cache = session.query(ScheduleCache).filter(
-            ScheduleCache.group_name == group_name,
+            ScheduleCache.group_name == normalized_group,
             ScheduleCache.week_type == "all_weeks"
         ).first()
         
         if cache:
             cache.schedule_data = json.dumps(schedule_data, ensure_ascii=False)
             cache.last_updated = datetime.utcnow()
-            logging.info(f"Обновлен кэш для {group_name}")
+            logging.info(f"Обновлен кэш для {normalized_group}")
         else:
             cache = ScheduleCache(
-                group_name=group_name,
+                group_name=normalized_group,
                 week_type="all_weeks",
                 schedule_data=json.dumps(schedule_data, ensure_ascii=False)
             )
             session.add(cache)
-            logging.info(f"Создан новый кэш для {group_name}")
+            logging.info(f"Создан новый кэш для {normalized_group}")
         
         session.commit()
-        logging.info(f"Кэш сохранен для {group_name}")
+        logging.info(f"Кэш сохранен для {normalized_group}")
         
     except Exception as e:
         logging.error(f"Ошибка при сохранении кэша: {e}")
@@ -137,6 +139,12 @@ def run_bot():
         loop.close()
 
 
+def run_webapp():
+    """Запускает Flask"""
+    # app.run(host="0.0.0.0", port=80, debug=False)
+    app.run(host="localhost", port=5000, debug=True, use_reloader=False)
+
+
 @app.route("/")  
 def web():  
     return render_template('index.html')  
@@ -148,31 +156,32 @@ def serve_styles(filename):
     return send_from_directory("vvsule/src/styles", filename)
 
 
-def run_webapp():
-    """Запускает Flask"""
-    app.run(host="0.0.0.0", port=80, debug=False)
-    # app.run(host="localhost", port=5000, debug=True, use_reloader=False)
+@app.route('/js/<path:filename>')
+def serve_js(filename):
+    """Обслуживает JavaScript файлы из vvsule/src/js"""
+    return send_from_directory("vvsule/src/js", filename)
 
 
 @app.route('/api/schedule', methods=['GET'])
 def get_schedule():
     """API endpoint для получения расписания"""
     group_name = request.args.get('group', '').strip()
+    normalized_group = group_name.upper()
     
-    if not group_name:
+    if not normalized_group:
         return jsonify({
             'success': False,
             'message': 'Не указана группа'
         })
 
     # Проверяем кэш
-    cached_data = get_cached_schedule(group_name)
+    cached_data = get_cached_schedule(normalized_group)
     
     if cached_data:
         return jsonify({
             'success': True,
             'schedule': cached_data,
-            'group': group_name,
+            'group': normalized_group,
             'weeks_count': len(cached_data.get('weeks', [])),
             'source': 'cache'
         })
@@ -186,18 +195,18 @@ def get_schedule():
     
     try:
         # Используем существующую функцию парсинга
-        schedule_data = parse_vvsu_timetable(group_name)
+        schedule_data = parse_vvsu_timetable(normalized_group)
         
         if schedule_data and schedule_data.get('success'):
             # Сохраняем в кэш
-            save_schedule_cache(group_name, schedule_data)
+            save_schedule_cache(normalized_group, schedule_data)
 
             weeks = schedule_data.get('weeks', [])
 
             return jsonify({
                 'success': True,
                 'schedule': schedule_data,
-                'group': group_name,
+                'group': normalized_group,
                 'weeks_count': len(weeks),
                 'source': 'parser'
             })
@@ -230,11 +239,12 @@ def cache_stats():
         })
     
     session = SessionLocal()
+    normalized_group = group_name.upper()
     try:
         total_cache = session.query(ScheduleCache).count()
         
         # Группы в кэше
-        groups = session.query(ScheduleCache.group_name).distinct().all()
+        groups = session.query(ScheduleCache.normalized_group).distinct().all()
         groups_list = [g[0] for g in groups]
         
         return jsonify({

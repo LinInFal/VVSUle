@@ -63,21 +63,24 @@ async def process_input_group(callback: types.CallbackQuery, state: FSMContext):
 async def process_group_input(message: types.Message, state: FSMContext):
     """Обработчик ввода группы"""
     group_name = message.text.strip()
+
+    # Приводим к верхнему регистру
+    normalized_group = group_name.upper()
     
     # Сохраняем группу в БД
     async for session in database.get_session():
         await crud.update_user_group(
             session=session,
             telegram_id=message.from_user.id,
-            group_name=group_name
+            group_name=normalized_group
         )
     
     # Редактируем сообщение с приветствием
     await message.answer(
-        f"✅ Группа сохранена: <b>{group_name}</b>\n\n"
+        f"✅ Группа сохранена: <b>{normalized_group}</b>\n\n"
         "Выберите кнопку ниже для просмотра расписания:",
         parse_mode="HTML",
-        reply_markup=get_main_menu_keyboard(group_name)
+        reply_markup=get_main_menu_keyboard(normalized_group)
     )
     await state.clear()
 
